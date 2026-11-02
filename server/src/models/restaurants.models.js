@@ -33,6 +33,10 @@ const restaurantSchema = new Schema({
     image: {
         type: String,
         required: true
+    },
+    refreshToken: {
+        type: String,
+        default: null
     }
 }, {timestamps: true});
 
