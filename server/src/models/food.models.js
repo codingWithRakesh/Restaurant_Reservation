@@ -16,6 +16,15 @@ const foodSchema = new Schema({
     image: {
         type: String,
         required: true
+    },
+    fileId: {
+        type: String,
+        required: true
+    },
+    restaurant: {
+        type: Schema.Types.ObjectId,
+        ref: 'Restaurant',
+        required: true
     }
 }, {timestamps: true});
 

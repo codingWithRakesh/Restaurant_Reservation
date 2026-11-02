@@ -114,3 +114,9 @@ const currentRestaurant = asyncHandler(async (req, res) => {
             new ApiResponse(200, restaurant, "Current restaurant fetched successfully")
         )
 })
+
+export {
+    loginRestaurant,
+    logoutRestaurant,
+    currentRestaurant
+}
