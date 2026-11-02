@@ -11,6 +11,6 @@ const router = Router();
 
 router.route("/create").post(verifyRestaurants, upload.single("image"), createTable);
 router.route("/delete/:id").delete(verifyRestaurants, deleteTable);
-router.route("/all").get(verifyRestaurants, getAllTables);
+router.route("/all").get(getAllTables);
 
 export default router;

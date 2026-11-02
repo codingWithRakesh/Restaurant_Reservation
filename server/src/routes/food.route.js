@@ -7,6 +7,6 @@ const router = Router();
 
 router.route("/create").post(verifyRestaurants, upload.single("image"), createFood);
 router.route("/delete/:id").delete(verifyRestaurants, deleteFood);
-router.route("/all").get(verifyRestaurants, getAllFoods);
+router.route("/all").get(getAllFoods);
 
 export default router;
