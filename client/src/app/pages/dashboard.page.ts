@@ -1,9 +1,14 @@
-import { Component, OnInit, computed } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { Component, OnInit, computed, signal } from '@angular/core';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Router } from '@angular/router';
+import { AdminAction, AdminDockComponent } from '../components/admin-dock.component';
+import { FoodModalComponent } from '../components/food-modal.component';
 import { IconComponent } from '../components/icon.component';
+import { ProfileModalComponent } from '../components/profile-modal.component';
+import { TableModalComponent } from '../components/table-modal.component';
 import { Table, RestaurantReservation } from '../core/models';
 import { select } from '../core/store-signal';
+import { adminStore } from '../store/admin.store';
 import { authStore } from '../store/auth.store';
 import { catalogStore } from '../store/catalog.store';
 import { reservationStore } from '../store/reservation.store';
@@ -13,9 +18,9 @@ interface Row { table: Table; booking?: RestaurantReservation }
 @Component({
   selector: 'app-dashboard-page',
   standalone: true,
-  imports: [DatePipe, IconComponent],
+  imports: [DatePipe, CurrencyPipe, IconComponent, AdminDockComponent, ProfileModalComponent, FoodModalComponent, TableModalComponent],
   template: `
-    <main class="mx-auto max-w-5xl px-6 py-8">
+    <main class="mx-auto max-w-5xl px-6 py-8 pb-32">
       <header class="flex items-center justify-between">
         <div>
           <h1 class="font-display text-3xl text-white">{{ account()?.name || 'Restaurant' }} dashboard</h1>
@@ -23,6 +28,8 @@ interface Row { table: Table; booking?: RestaurantReservation }
         </div>
         <button class="btn-ghost" (click)="logout()"><app-icon name="logout" [size]="16" />Log out</button>
       </header>
+
+      @if (adminError()) { <p class="mt-4 rounded-xl bg-rose-500/10 p-3 text-sm text-rose-400">{{ adminError() }}</p> }
 
       <section class="mt-8 grid gap-4 sm:grid-cols-3">
         <div class="card flex items-center gap-4 p-5">
@@ -69,21 +76,59 @@ interface Row { table: Table; booking?: RestaurantReservation }
               </div>
             }
 
-            <span class="self-start rounded-full px-3 py-1 text-xs font-medium sm:self-center"
-                  [class]="row.table.status === 'reserved' ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'">
-              {{ row.table.status === 'reserved' ? 'Booked' : 'Not booked' }}
-            </span>
+            <div class="flex items-center gap-3 self-start sm:self-center">
+              <span class="rounded-full px-3 py-1 text-xs font-medium"
+                    [class]="row.table.status === 'reserved' ? 'bg-rose-500/15 text-rose-400' : 'bg-emerald-500/15 text-emerald-400'">
+                {{ row.table.status === 'reserved' ? 'Booked' : 'Not booked' }}
+              </span>
+              <button class="rounded-lg p-2 text-neutral-500 transition hover:bg-rose-500/10 hover:text-rose-400"
+                      aria-label="Delete table" [disabled]="busy()" (click)="removeTable(row.table)">
+                <app-icon name="trash" [size]="18" />
+              </button>
+            </div>
           </div>
         } @empty {
-          <p class="text-neutral-400">No tables yet. Add tables through your API to see them here.</p>
+          <p class="text-neutral-400">No tables yet. Use "Add table" below to create your first one.</p>
         }
       </div>
-    </main>`,
+
+      <h2 class="mt-12 mb-4 text-lg text-white">Menu</h2>
+      <div class="space-y-3">
+        @for (f of foods(); track f._id) {
+          <div class="card flex items-center gap-4 p-3">
+            <img [src]="f.image" [alt]="f.name" class="h-16 w-16 rounded-xl object-cover" />
+            <div class="min-w-0 flex-1">
+              <p class="truncate text-white">{{ f.name }}</p>
+              <p class="truncate text-sm text-neutral-400">{{ f.description }}</p>
+            </div>
+            <span class="text-sm font-semibold text-saffron">{{ f.price | currency:'INR':'symbol':'1.0-0' }}</span>
+            <button class="rounded-lg p-2 text-neutral-500 transition hover:bg-rose-500/10 hover:text-rose-400"
+                    aria-label="Delete dish" [disabled]="busy()" (click)="removeFood(f._id, f.name)">
+              <app-icon name="trash" [size]="18" />
+            </button>
+          </div>
+        } @empty {
+          <p class="text-neutral-400">No dishes yet. Use "Add food" below.</p>
+        }
+      </div>
+    </main>
+
+    <app-admin-dock (pick)="modal.set($event)" />
+
+    @switch (modal()) {
+      @case ('profile') { <app-profile-modal (close)="modal.set(null)" /> }
+      @case ('food') { <app-food-modal (close)="modal.set(null)" /> }
+      @case ('table') { <app-table-modal (close)="modal.set(null)" /> }
+    }`,
 })
 export class DashboardPage implements OnInit {
   account = select(authStore, s => s.account);
   tables = select(catalogStore, s => s.tables);
+  foods = select(catalogStore, s => s.foods);
   bookings = select(reservationStore, s => s.forRestaurant);
+  busy = select(adminStore, s => s.busy);
+  adminError = select(adminStore, s => s.error);
+  modal = signal<AdminAction | null>(null);
 
   total = computed(() => this.tables().length);
   booked = computed(() => this.tables().filter(t => t.status === 'reserved').length);
@@ -100,10 +145,21 @@ export class DashboardPage implements OnInit {
   });
 
   constructor(private router: Router) {}
+
   ngOnInit() {
     catalogStore.getState().fetchTables();
+    catalogStore.getState().fetchFoods();
     reservationStore.getState().fetchForRestaurant();
   }
+
+  removeTable(t: Table) {
+    if (confirm(`Delete table ${t.tableNumber}? This can't be undone.`))
+      adminStore.getState().deleteTable(t._id);
+  }
+  removeFood(id: string, name: string) {
+    if (confirm(`Delete "${name}" from the menu?`)) adminStore.getState().deleteFood(id);
+  }
+
   async logout() {
     await authStore.getState().logout();
     this.router.navigate(['/restaurant/login']);

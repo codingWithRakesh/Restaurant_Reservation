@@ -3,36 +3,44 @@ import {Schema, model} from 'mongoose';
 const restaurantSchema = new Schema({
     name: {
         type: String,
-        required: true
+        required: false
     },
     address: {
         type: String,
-        required: true
+        required: false
     },
     phone: {
         type: String,
-        required: true
+        required: false
     },
     email: {
         type: String,
         required: true,
         unique: true
     },
+    password: {
+        type: String,
+        required: true,
+    },
     opening_Time: {
         type: String,
-        required: true
+        required: false
     },
     closing_Time: {
         type: String,
-        required: true
+        required: false
     },
     description: {
         type: String,
-        required: true
+        required: false
     },
     image: {
         type: String,
-        required: true
+        required: false
+    },
+    fileId: {
+        type: String,
+        required: false
     },
     refreshToken: {
         type: String,

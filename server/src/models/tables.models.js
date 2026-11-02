@@ -18,6 +18,10 @@ const tableSchema = new Schema({
         type: String,
         required: true
     },
+    fileId: {
+        type: String,
+        required: true
+    },
     floor: {
         type: Number,
         required: true

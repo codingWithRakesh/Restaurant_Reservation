@@ -5,6 +5,7 @@ import Restaurant from "../models/restaurants.models.js";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import {options} from "../constants.js";
+import { uploadToImageKit, deleteFromImageKit } from "../utils/imageKit.js";
 
 const accessAndRefreshTokenGenrator = async (restaurantId) => {
     try {
@@ -115,8 +116,108 @@ const currentRestaurant = asyncHandler(async (req, res) => {
         )
 })
 
+const addDetails = asyncHandler(async (req, res) => {
+    const restaurantId = req.restaurant?._id;
+
+    if (!restaurantId) {
+        throw new ApiError(401, "Unauthorized");
+    }
+
+    const {
+        name,
+        address,
+        phone,
+        opening_Time,
+        closing_Time,
+        description
+    } = req.body;
+
+    if (!name || !address || !phone || !opening_Time || !closing_Time || !description) {
+        throw new ApiError(400, "All fields are required");
+    }
+
+    const restaurantExists = await Restaurant.findById(restaurantId);
+
+    if (!restaurantExists) {
+        throw new ApiError(404, "Restaurant not found");
+    }
+
+    let newImage = null;
+
+    if (req.file) {
+        newImage = await uploadToImageKit(
+            req.file.buffer,
+            req.file.originalname,
+            `/restaurants/${restaurantId}`
+        );
+
+        if (!newImage?.url || !newImage?.fileId) {
+            throw new ApiError(500, "Image upload failed");
+        }
+    }
+
+    const updateData = {
+        name,
+        address,
+        phone,
+        opening_Time,
+        closing_Time,
+        description
+    };
+
+    if (newImage) {
+        updateData.image = newImage.url;
+        updateData.fileId = newImage.fileId;
+    }
+
+    let restaurant;
+
+    try {
+        restaurant = await Restaurant.findByIdAndUpdate(
+            restaurantId,
+            { $set: updateData },
+            {
+                new: true,
+                runValidators: true
+            }
+        ).select("-password -refreshToken");
+
+        if (!restaurant) {
+            throw new ApiError(500, "Failed to update restaurant details");
+        }
+    } catch (error) {
+
+        if (newImage?.fileId) {
+            try {
+                await deleteFromImageKit(newImage.fileId);
+            } catch (deleteError) {
+                console.error("New image cleanup failed:", deleteError);
+            }
+        }
+
+        throw error;
+    }
+
+    if (newImage && restaurantExists.fileId) {
+        try {
+            await deleteFromImageKit(restaurantExists.fileId);
+        } catch (error) {
+            console.error("Previous image deletion failed:", error);
+        }
+    }
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            restaurant,
+            "Restaurant details updated successfully"
+        )
+    );
+});
+
 export {
     loginRestaurant,
     logoutRestaurant,
-    currentRestaurant
+    currentRestaurant,
+    addDetails
 }

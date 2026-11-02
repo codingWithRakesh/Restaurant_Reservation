@@ -16,6 +16,7 @@ interface AuthState {
   loginRestaurant: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   clearError: () => void;
+  setAccount: (a: User | Restaurant) => void;
 }
 
 let initPromise: Promise<void> | null = null;
@@ -88,6 +89,7 @@ export const authStore = createStore<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+      setAccount: account => set({ account }),
     }),
     { name: 'auth', partialize: s => ({ role: s.role }) as Partial<AuthState> as AuthState },
   ),

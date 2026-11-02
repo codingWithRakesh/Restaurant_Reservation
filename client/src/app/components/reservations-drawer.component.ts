@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
 import { DatePipe } from '@angular/common';
 import { select } from '../core/store-signal';
+import { authStore } from '../store/auth.store';
 import { reservationStore } from '../store/reservation.store';
 import { IconComponent } from './icon.component';
 
@@ -46,6 +48,12 @@ import { IconComponent } from './icon.component';
           </div>
         }
       </div>
+
+      <footer class="border-t border-ink-700 p-5">
+        <button class="btn-ghost w-full" (click)="logout()">
+          <app-icon name="logout" [size]="16" />Log out
+        </button>
+      </footer>
     </aside>`,
 })
 export class ReservationsDrawerComponent {
@@ -54,4 +62,12 @@ export class ReservationsDrawerComponent {
   busy = select(reservationStore, s => s.busy);
   close = () => reservationStore.getState().setDrawer(false);
   cancel = (id: string) => reservationStore.getState().cancel(id);
+
+  constructor(private router: Router) {}
+
+  async logout() {
+    this.close();
+    await authStore.getState().logout();
+    this.router.navigate(['/login']);
+  }
 }

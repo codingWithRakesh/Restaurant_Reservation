@@ -10,6 +10,7 @@ interface CatalogState {
   error: string | null;
   fetchHome: () => Promise<void>;
   fetchTables: () => Promise<void>;
+  fetchFoods: () => Promise<void>;
 }
 
 export const catalogStore = createStore<CatalogState>()(set => ({
@@ -39,5 +40,10 @@ export const catalogStore = createStore<CatalogState>()(set => ({
     } catch (e) {
       set({ loading: false, error: errMsg(e) });
     }
+  },
+
+  fetchFoods: async () => {
+    try { set({ foods: await api<Food[]>('/food/all') }); }
+    catch (e) { set({ error: errMsg(e) }); }
   },
 }));
