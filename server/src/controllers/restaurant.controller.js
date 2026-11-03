@@ -116,6 +116,17 @@ const currentRestaurant = asyncHandler(async (req, res) => {
         )
 })
 
+const getRestaurantInfo = asyncHandler(async (req, res) => {
+    const restaurant = await Restaurant.findOne().select("-password -refreshToken");
+    if (!restaurant) {
+        throw new ApiError(404, "Restaurant not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, restaurant, "Restaurant info fetched successfully")
+    );
+});
+
 const addDetails = asyncHandler(async (req, res) => {
     const restaurantId = req.restaurant?._id;
 
@@ -177,7 +188,7 @@ const addDetails = asyncHandler(async (req, res) => {
             restaurantId,
             { $set: updateData },
             {
-                new: true,
+                returnDocument: "after",
                 runValidators: true
             }
         ).select("-password -refreshToken");
@@ -219,5 +230,6 @@ export {
     loginRestaurant,
     logoutRestaurant,
     currentRestaurant,
+    getRestaurantInfo,
     addDetails
 }

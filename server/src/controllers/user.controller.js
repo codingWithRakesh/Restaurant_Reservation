@@ -86,7 +86,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const { accessToken, refreshToken } = await accessAndRefreshTokenGenrator(user._id);
 
-    const loggedInUser = await User.findByIdAndUpdate(user._id, { isOnline: true }, { new: true }).select("-password -refreshToken");
+    const loggedInUser = await User.findByIdAndUpdate(user._id, { isOnline: true }, { returnDocument: "after" }).select("-password -refreshToken");
 
     return res
         .status(200)

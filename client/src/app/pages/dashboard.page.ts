@@ -135,7 +135,6 @@ export class DashboardPage implements OnInit {
   free = computed(() => this.total() - this.booked());
   occupancy = computed(() => (this.total() ? Math.round((this.booked() / this.total()) * 100) : 0));
 
-  // Booked tables first
   rows = computed<Row[]>(() => {
     const byTable = new Map<string, RestaurantReservation>();
     this.bookings().filter(b => b.status !== 'cancelled').forEach(b => byTable.set(b.table._id, b));

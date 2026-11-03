@@ -36,11 +36,11 @@ const createTable = asyncHandler(async (req, res) => {
 })
 
 const deleteTable = asyncHandler(async (req, res) => {
-    const { tableId } = req.params;
-    if (!tableId) {
+    const { id } = req.params;
+    if (!id) {
         throw new ApiError(400, "Table ID is required");
     }
-    const table = await Table.findById(tableId);
+    const table = await Table.findById(id);
     if (!table) {
         throw new ApiError(404, "Table not found");
     }
@@ -48,7 +48,7 @@ const deleteTable = asyncHandler(async (req, res) => {
     if (!deleteResult) {
         throw new ApiError(500, "Image deletion failed");
     }
-    await table.remove();
+    await table.deleteOne();
     res.status(200).json(new ApiResponse(200, null, "Table deleted successfully"));
 })
 

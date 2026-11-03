@@ -48,7 +48,6 @@ export class TablesPage implements OnInit {
   error = select(catalogStore, s => s.error);
   selected = signal<Table | null>(null);
 
-  // Available first, then reserved
   available = computed(() => this.tables().filter(t => t.status === 'available'));
   reserved = computed(() => this.tables().filter(t => t.status === 'reserved'));
 

@@ -12,14 +12,12 @@ export interface Table {
 
 export interface Food { _id: string; name: string; description: string; price: number; image: string }
 
-/** Shape returned by GET /reservation/user */
 export interface UserReservation {
   _id: string; date: string; time: string; status: 'pending' | 'confirmed' | 'cancelled';
   restaurant: { _id: string; name: string; address: string };
   table: { _id: string; tableNumber: number; capacity: number; floor: number };
 }
 
-/** Shape returned by GET /reservation/restaurant */
 export interface RestaurantReservation {
   _id: string; date: string; time: string; status: 'pending' | 'confirmed' | 'cancelled';
   user: { _id: string; name: string; email: string };

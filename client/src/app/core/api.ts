@@ -2,7 +2,6 @@ import { API_URL } from './config';
 
 type Options = { method?: string; body?: unknown };
 
-/** Thin fetch wrapper: sends cookies, unwraps ApiResponse.data, throws readable errors. */
 export async function api<T>(path: string, { method = 'GET', body }: Options = {}): Promise<T> {
   const isForm = body instanceof FormData;
   const res = await fetch(API_URL + path, {

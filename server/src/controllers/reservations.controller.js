@@ -31,7 +31,7 @@ const createReservation = asyncHandler(async (req, res) => {
         throw new ApiError(500, "Reservation creation failed");
     }
 
-    const table = await Table.findByIdAndModify(tableId, { status: 'reserved' }, { new: true });
+    const table = await Table.findByIdAndUpdate(tableId, { status: 'reserved' }, { returnDocument: 'after' });
     if (!table) {
         throw new ApiError(404, "Table not found");
     }
@@ -39,22 +39,25 @@ const createReservation = asyncHandler(async (req, res) => {
 })
 
 const deleteReservation = asyncHandler(async (req, res) => {
-    const { reservationId } = req.params;
-    if (!reservationId) {
+    const { id } = req.params;
+    if (!id) {
         throw new ApiError(400, "Reservation ID is required");
     }
-    const reservation = await Reservation.findById(reservationId);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        throw new ApiError(400, "Invalid reservation ID");
+    }
+    const reservation = await Reservation.findById(id);
     if (!reservation) {
         throw new ApiError(404, "Reservation not found");
     }
     if (reservation.user.toString() !== req.user._id.toString()) {
         throw new ApiError(403, "You are not the owner of this reservation");
     }
-    const table = await Table.findByIdAndModify(reservation.table, { status: 'available' }, { new: true });
+    const table = await Table.findByIdAndUpdate(reservation.table, { status: 'available' }, { returnDocument: 'after' });
     if (!table) {
         throw new ApiError(404, "Table not found");
     }
-    await reservation.remove();
+    await reservation.deleteOne();
     res.status(200).json(new ApiResponse(200, null, "Reservation deleted successfully"));
 })
 
@@ -62,7 +65,7 @@ const getUserReservations = asyncHandler(async (req, res) => {
     const userId = req.user._id;
     const reservations = await Reservation.aggregate([
         {
-            $match: { user: mongoose.Types.ObjectId(userId) }
+            $match: { user: new mongoose.Types.ObjectId(userId) }
         },
         {
             $lookup: {
@@ -106,9 +109,6 @@ const getUserReservations = asyncHandler(async (req, res) => {
             }
         }
     ])
-    if (!reservations) {
-        throw new ApiError(404, "No reservations found for this user");
-    }
     res.status(200).json(new ApiResponse(200, reservations, "User reservations fetched successfully"));
 })
 
@@ -116,7 +116,7 @@ const getRestaurantReservations = asyncHandler(async (req, res) => {
     const restaurantId = req.restaurant._id;
     const reservations = await Reservation.aggregate([
         {
-            $match: { restaurant: mongoose.Types.ObjectId(restaurantId) }
+            $match: { restaurant: new mongoose.Types.ObjectId(restaurantId) }
         },
         {
             $lookup: {

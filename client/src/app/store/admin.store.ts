@@ -16,7 +16,6 @@ interface AdminState {
 }
 
 export const adminStore = createStore<AdminState>()((set, get) => {
-  /** Runs an API call, tracks busy/error, returns true on success. */
   const run = async (fn: () => Promise<unknown>) => {
     set({ busy: true, error: null });
     try { await fn(); set({ busy: false }); return true; }

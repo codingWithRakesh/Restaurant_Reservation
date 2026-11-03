@@ -39,11 +39,11 @@ const createFood = asyncHandler(async (req, res) => {
 })
 
 const deleteFood = asyncHandler(async (req, res) => {
-    const { foodId } = req.params;
-    if (!foodId) {
+    const { id } = req.params;
+    if (!id) {
         throw new ApiError(400, "Food ID is required");
     }
-    const food = await Food.findById(foodId);
+    const food = await Food.findById(id);
     if (!food) {
         throw new ApiError(404, "Food not found");
     }
@@ -51,7 +51,7 @@ const deleteFood = asyncHandler(async (req, res) => {
     if (!deleteResult) {
         throw new ApiError(500, "Image deletion failed");
     }
-    await food.remove();
+    await food.deleteOne();
     res.status(200).json(new ApiResponse(200, null, "Food deleted successfully"));
 })
 

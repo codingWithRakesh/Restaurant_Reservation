@@ -29,7 +29,6 @@ export const authStore = createStore<AuthState>()(
       loading: false,
       error: null,
 
-      // Restores the session from the cookie once per page load.
       init: () => {
         if (!initPromise) {
           initPromise = (async () => {

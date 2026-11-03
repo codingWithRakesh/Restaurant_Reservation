@@ -9,7 +9,6 @@ export const roleGuard = (role: Exclude<Role, null>): CanActivateFn => async () 
   return inject(Router).createUrlTree([role === 'user' ? '/login' : '/restaurant/login']);
 };
 
-/** Login/register pages: bounce logged-in people to their home. */
 export const guestGuard: CanActivateFn = async () => {
   await authStore.getState().init();
   const { role, account } = authStore.getState();

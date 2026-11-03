@@ -18,7 +18,7 @@ import { IconComponent } from './icon.component';
 })
 export class FilePickerComponent {
   label = input('Choose an image');
-  current = input<string>('');          // existing image url (edit mode)
+  current = input<string>('');
   picked = output<File>();
   preview = signal('');
   fileName = signal('');
